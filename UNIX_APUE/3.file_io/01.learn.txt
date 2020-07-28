@@ -1,0 +1,45 @@
+1. 常用 open write read lseek close
+2. open 
+    oflag:  O_RDONLY O_WRONLY O_RDWR O_EXEC O_SEARCH
+            O_APPEND O_CLOEXEC O_CREAT O_DIRECTORY O_EXCL O_NOCTTY O_NOFOLLOW O_NONBLOCK O_SYNC O_TRUNC O_TTY_INIT
+    open(const char * path, int oflag, ... /* int mode */)
+    openat(int fd, const char * path, int oflag, ... /* int mode */)
+
+3. create 不常用 ，等于open(file, O_RDONLY |O_CREAT | O_TRUNC, mode)
+4. close close(int fd);
+5. lseek() off_t lseek(int fd, off_t offset, int whence) 
+    whence: SEEK_SET/SEEK_CUR/SEEK_END
+    return -1时为lseek失败
+
+5. 进程表项,文件描述符->文件表项,文件状态标识,文件偏移->文件v节点<->文件i节点
+    a. O_APPEND 多进程在共享文件的作用
+    b. O_CREAT | O_EXCL 不存在则创建，存在则返回错误 原子操作
+
+6. dup dup2
+    int dup(int fd);    复制fd,创建新的fd
+    int dup2(int fd, int newfd); 指定newfd，复制出的fd = newfd,
+
+    dup => fcntl(fd, F_DUPFD, 0);
+    dup2 => close(fd2) + fcntl(fd, F_DUPFD, fd2); => dup2 原子操作
+    
+7. sync -> 立刻返回，将缓冲区排入写队列。update 每隔30秒 调用一次sync
+   fsync -> 只对指定的文件描述符起作用，等待写完成
+   fdatasync -> 类似fsync,只影响文件部分数据.fsync还会更新文件属性
+
+8. fcntl ->  int fcntl(int fd, int cmd, ... /* int arg */);
+    复制fd: F_DUPFD, F_DUPFD_CLOEXEC
+    文件描述符标志 F_GETFD, F_SETFD
+    文件状态标志 F_GETFL, F_SETFL
+    异步IO所有权 F_GTEOWN, G_SETOWN
+    记录锁 F_GETLK, F_SETLK/ F_SETLKW
+
+9. ioctl
+    <termios.h> 终端IO
+    盘标号  DIOXXX  <sys/disklabel.h>
+    文件IO  FIOXXX  <sys/filio.h>
+    磁带IO  MTIOXXX <sys/mtio.h>
+    套接字IO    SIOXXX  <sys/sockio.h>
+    终端IO  TIOXXX  <sys/ttycom.h>
+    
+
+10. /dev/fd/0 /dev/fd/1 /dev/fd/2 
