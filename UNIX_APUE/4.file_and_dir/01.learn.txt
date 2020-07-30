@@ -1,0 +1,126 @@
+1. stat结构
+struct stat {
+    dev_t     st_dev;         /* ID of device containing file */
+    ino_t     st_ino;         /* Inode number */
+    mode_t    st_mode;        /* File type and mode */
+    nlink_t   st_nlink;       /* Number of hard links */
+    uid_t     st_uid;         /* User ID of owner */
+    gid_t     st_gid;         /* Group ID of owner */
+    dev_t     st_rdev;        /* Device ID (if special file) */
+    off_t     st_size;        /* Total size, in bytes */
+    blksize_t st_blksize;     /* Block size for filesystem I/O */
+    blkcnt_t  st_blocks;      /* Number of 512B blocks allocated */
+
+    /* Since Linux 2.6, the kernel supports nanosecond
+        precision for the following timestamp fields.
+        For the details before Linux 2.6, see NOTES. */
+
+    struct timespec st_atim;  /* Time of last access */
+    struct timespec st_mtim;  /* Time of last modification */
+    struct timespec st_ctim;  /* Time of last status change */
+
+#define st_atime st_atim.tv_sec      /* Backward compatibility */
+#define st_mtime st_mtim.tv_sec
+#define st_ctime st_ctim.tv_sec
+};
+
+
+2. 函数
+    stat fstat fstatat lstat
+    struct stat st;
+    stat(file_path, &st); 0:success; -1:failed and set error no
+    fstatat(fd, filename, &st, flag) flag:[0] or [AT_SYMLINK_NOFOLLOW]
+
+2. 设置用户ID 和 设置组ID
+    我们实际上是谁：实际用户ID 实际组ID
+    用于文件访问权限检查：有效用户ID 有效组ID 附属组ID
+    由exec函数保存：保存的设置用户ID 保存的设置组ID
+    文件相关：文件所有者ID 文件所有组ID
+    文件执行权限：设置用户ID位、设置组ID位 st_mode
+
+    所有者ID是文件性质
+    有效ID是进程性质
+
+3. chmod o+x xxx
+    o: others
+    g: group
+    u: owner(user)
+
+4. 权限
+    打开的目录要有执行权限 (搜索位)，执行权限和读权限
+    读权限-》O_RDONLY  O_RDWR
+    写权限-》O_WRONLY  O_RDWR  O_TRUNC
+
+    在一个目录里创建文件：要有执行权限和写权限
+
+    删除一个文件：对目录有执行权限和写权限
+
+    如果用7个exec函数中的任何一个执行某个文件，都必须对该文件有执行权限。该文件还必须是一个普通文件
+
+5. 内核测试权限
+    a. 超级用户ID
+    b. 有效用户ID == 所有者ID
+    c. 有效用户组ID == 所有者组ID
+    d. 其他用户
+    如果进程拥有此文件，这按照用户访问权限批准或拒绝;
+    如果进程不拥有此文件，但属于适当的组，则按照用户组权限批准或拒绝；
+    如果进程不属于适当的组，这按照其他用户访问权限批准或者拒绝访问
+
+6. 新文件的用户ID设置为进程的有效用户ID
+    新文件组ID可以是进程的有效组ID
+    新文件组ID可以是目录的组ID(集成目录的组ID) (linux /var/mail)
+    MacOS、FreeBSD系统默认。Linux需要指定上述两种方式之一
+
+
+注：
+The file type and mode
+    The stat.st_mode field contians the file type and mode
+
+    POSIX refers to the stat.st_mode bits corresponding to the mask S_IFMT as file type
+    the 12 bits corresponding to the mask 07777 as the file mode bits and the least sign-
+    ficant 9 bits 0777 as file permission bits.
+
+    The following mask values are defined for the file type:
+
+        S_IFMT     0170000   bit mask for the file type bit field
+
+        S_IFSOCK   0140000   socket
+        S_IFLNK    0120000   symbolic link
+        S_IFREG    0100000   regular file
+        S_IFBLK    0060000   block device
+        S_IFDIR    0040000   directory
+
+        S_IFCHR    0020000   character device
+        S_IFIFO    0010000   FIFO
+
+    stat(pathname, &sb);
+    if ((sb.st_mode & S_IFMT) == S_IFREG) {
+        /* Handle regular file */
+    }
+
+    S_ISREG(m) S_ISDIR(m) S_ISCHR(m) S_ISBLK(m) S_ISFIFO(m) S_ISLNK(m) S_ISSOCK(m)
+
+
+
+    The following mask values are defined for the file mode component of the st_mode field:
+
+           S_ISUID     04000   set-user-ID bit
+           S_ISGID     02000   set-group-ID bit (see below)
+           S_ISVTX     01000   sticky bit (see below)
+
+           S_IRWXU     00700   owner has read, write, and execute permission
+           S_IRUSR     00400   owner has read permission
+           S_IWUSR     00200   owner has write permission
+           S_IXUSR     00100   owner has execute permission
+
+           S_IRWXG     00070   group has read, write, and execute permission
+           S_IRGRP     00040   group has read permission
+           S_IWGRP     00020   group has write permission
+           S_IXGRP     00010   group has execute permission
+
+           S_IRWXO     00007   others  (not  in group) have read, write, and
+                               execute permission
+           S_IROTH     00004   others have read permission
+
+           S_IWOTH     00002   others have write permission
+           S_IXOTH     00001   others have execute permission
