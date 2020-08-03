@@ -88,8 +88,10 @@ struct stat {
     新文件组ID可以是目录的组ID(集成目录的组ID) (linux /var/mail)
     MacOS、FreeBSD系统默认。Linux需要指定上述两种方式之一
 
-7.
+7. 文件中的空洞 由于设置的偏移量超出文件长度
 
+8.  ftruncate(int fildes, off_t length);
+    truncate(const char *path, off_t length);
 
 注：
 The file type and mode
