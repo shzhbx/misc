@@ -30,6 +30,23 @@ struct stat {
     struct stat st;
     stat(file_path, &st); 0:success; -1:failed and set error no
     fstatat(fd, filename, &st, flag) flag:[0] or [AT_SYMLINK_NOFOLLOW]
+    access(const char *pathname, int mode);
+    faccesat(int fd, const char *pathname, int mode, int flag); mode: R_OK W_OK X_OK F_OK flag: AT_ACCESS
+    umask(mdoe_t cmask);
+    chmod(const char *pathname, mode_t mode);
+    fchmod(int fd, mode_t mode);
+    fchmodat(int fd, const char *pathnamem, mode_t mode, int flag);
+        mode: S_ISUID S_ISGID S_ISVTX
+              S_IRWXU S_IRUSR S_IWUSR S_IRUSR
+              S_IRWXG S_IRGRP S_IWGRP S_IRGRP
+              S_IRWXO S_IROTH S_IWOTH S_IROTH
+        flag: AT_SYMLINK_NOFOLLOW
+        fd: AT_FDCWD
+    chown(const char *path, uid_t owner, gid_t group);
+    fchown(int fildes, uid_t owner, gid_t group);
+    lchown(const char *path, uid_t owner, gid_t group);
+    fchownat(int fd, const char *path, uid_t owner, gid_t group, int flag);
+
 
 2. 设置用户ID 和 设置组ID
     我们实际上是谁：实际用户ID 实际组ID
@@ -70,6 +87,8 @@ struct stat {
     新文件组ID可以是进程的有效组ID
     新文件组ID可以是目录的组ID(集成目录的组ID) (linux /var/mail)
     MacOS、FreeBSD系统默认。Linux需要指定上述两种方式之一
+
+7.
 
 
 注：
